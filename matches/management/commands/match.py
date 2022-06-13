@@ -17,13 +17,9 @@ class TitleMatcher(Matcher):
 
     def rank(self, job, candidate):
         keywords = self.tokenize(job.title)
+        step = self.PERFECT_MATCH / len(keywords)
         return sum(
-            [
-                self.PERFECT_MATCH / len(keywords)
-                if k in self.tokenize(candidate.title)
-                else 0
-                for k in keywords
-            ]
+            [step if k in self.tokenize(candidate.title) else 0 for k in keywords]
         )
 
 
@@ -47,7 +43,9 @@ class CandidateFinder:
 
         for matcher in self.matchers:
             for candidate in candidates:
-                # Here we could validate that value is between PERFECT_MATCH and 0
+                # Here we could validate that value is between PERFECT_MATCH and 0.
+                # It would be a good idea to run each rank in a separate background tasks
+                # as their implementation is somewhat independent.
                 candidate["rank"] += matcher.rank(job, candidate["candidate"])
 
         return candidates

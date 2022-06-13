@@ -63,3 +63,12 @@ from matches.management.commands.match import CandidateFinder, TitleMatcher, Ski
 
 CandidateFinder([TitleMatcher(), SkillMatcher()])
 ```
+
+### TitleMatcher
+
+This is a basic matcher that tokenizes titles to look for exact same keywords in the job title.
+
+
+### SkillMatcher
+
+This one checks for the skill in the Job to be the same as one on the Candidate.
