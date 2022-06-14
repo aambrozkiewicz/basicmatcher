@@ -56,10 +56,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         finder = CandidateFinder([TitleMatcher(), SkillMatcher()])
         job = Job.objects.get(pk=options["job_id"])
-        self.stdout.write(f"Matching for Job {job.title}")
+        self.stdout.write(f"Matching for Job {self.style.SUCCESS(job.title)}")
 
         matches = finder.find(job, Candidate.objects.all().prefetch_related("skills"))
-        sorted_matches = dict(sorted(matches.items(), key=lambda item: item[1], reverse=True))
+        sorted_matches = dict(
+            sorted(matches.items(), key=lambda item: item[1], reverse=True)
+        )
 
         for candidate, rank in sorted_matches.items():
-            print(f"{candidate}: {rank}")
+            self.stdout.write(f"{candidate}: {self.style.WARNING(str(rank))}")
