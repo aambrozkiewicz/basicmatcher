@@ -1,3 +1,5 @@
+import collections
+
 from django.core.management.base import BaseCommand
 
 from matches.models import Candidate, Job
@@ -33,22 +35,16 @@ class CandidateFinder:
         self.matchers = matchers
 
     def find(self, job, candidates):
-        candidates = [
-            {
-                "candidate": candidate,
-                "rank": 0,
-            }
-            for candidate in candidates
-        ]
+        matches = collections.defaultdict(int)
 
         for matcher in self.matchers:
             for candidate in candidates:
                 # Here we could validate that value is between PERFECT_MATCH and 0.
                 # It would be a good idea to run each rank in a separate background tasks
                 # as their implementation is somewhat independent.
-                candidate["rank"] += matcher.rank(job, candidate["candidate"])
+                matches[candidate] += matcher.rank(job, candidate)
 
-        return candidates
+        return matches
 
 
 class Command(BaseCommand):
@@ -62,10 +58,8 @@ class Command(BaseCommand):
         job = Job.objects.get(pk=options["job_id"])
         self.stdout.write(f"Matching for Job {job.title}")
 
-        matched_candidates = finder.find(
-            job, Candidate.objects.all().prefetch_related("skills")
-        )
-        matched_candidates.sort(key=lambda c: c["rank"], reverse=True)
+        matches = finder.find(job, Candidate.objects.all().prefetch_related("skills"))
+        sorted_matches = dict(sorted(matches.items(), key=lambda item: item[1], reverse=True))
 
-        for matched_candidate in matched_candidates:
-            print(f"{matched_candidate['candidate']}: {matched_candidate['rank']}")
+        for candidate, rank in sorted_matches.items():
+            print(f"{candidate}: {rank}")
