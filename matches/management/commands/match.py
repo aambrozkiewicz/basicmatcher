@@ -59,9 +59,6 @@ class Command(BaseCommand):
         self.stdout.write(f"Matching for Job {self.style.SUCCESS(job.title)}")
 
         matches = finder.find(job, Candidate.objects.all().prefetch_related("skills"))
-        sorted_matches = dict(
-            sorted(matches.items(), key=lambda item: item[1], reverse=True)
-        )
 
-        for candidate, rank in sorted_matches.items():
-            self.stdout.write(f"{candidate}: {self.style.WARNING(str(rank))}")
+        for candidate in sorted(matches, key=matches.get, reverse=True):
+            self.stdout.write(f"{candidate}: {self.style.WARNING(str(matches[candidate]))}")
